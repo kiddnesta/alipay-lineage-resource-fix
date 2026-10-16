@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="local.alipay.resourcefix" android:versionCode="1" android:versionName="0.1.0">
+    <uses-sdk android:minSdkVersion="33" android:targetSdkVersion="33" />
+    <application android:label="支付宝资源冲突修复" android:allowBackup="false" android:hasCode="true">
+        <meta-data android:name="xposedmodule" android:value="true" />
+        <meta-data android:name="xposeddescription" android:value="修复 Android 13 上支付宝聊天资源与 LineageOS 0x3f 资源冲突，仅作用于支付宝主进程。" />
+        <meta-data android:name="xposedminversion" android:value="82" />
+        <meta-data android:name="xposedscope" android:resource="@array/xposed_scope" />
+    </application>
+</manifest>

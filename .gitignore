@@ -1,0 +1,10 @@
+/build/
+/deps/
+/dist/
+__pycache__/
+*.pyc
+*.keystore
+*.jks
+local.properties
+.idea/
+.vscode/
