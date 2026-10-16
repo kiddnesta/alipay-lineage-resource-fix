@@ -25,6 +25,52 @@ v0.1.0 是已进行真机验证的实验版本，使用调试签名；后续正�
 
 相关讨论：[LineageOS issue #332](https://github.com/LineageOS/issues/issues/332)。也有针对性的 [AssetManager2 系统补丁](https://github.com/WeiguangTWK/android_frameworks_base/commit/00e5c7bf68931f00a9d549e932eb4d2593981232)。本模块独立实现进程内兼容处理，并非该补丁的移植。
 
+## 外部用户报告与报错示例
+
+以下两条记录来自其他用户，用于对照故障现象；不代表本模块已在这些设备或 Android 版本上验证。
+
+### 报告 1：Xiaomi 12S / LineageOS 23.2
+
+用户 sup3root 在 [LineageOS issue #332](https://github.com/LineageOS/issues/issues/332) 报告：支付宝 12.12.1.7200 点击“消息”中的聊天会话立即闪退。关键日志节选：
+
+```text
+android.content.res.Resources$NotFoundException
+resourceId=[0x3f090042], packageId=[63]
+File 汽车 from xml type layout resource ID #0x3f090042
+com.alipay.mobile.chatuisdk.ext.quickmenu.QuickMenuUtil.refreshQuickMenu
+```
+
+这里应当打开布局 XML，却把“汽车”当作文件名，与本项目调查到的资源 ID 冲突表现一致。
+
+### 报告 2：Moto Edge 20 Pro / pstar
+
+用户 gddfczl 在 [2026-08-24 的评论](https://github.com/LineageOS/issues/issues/332#issuecomment-5391398231) 反馈同样问题，并称支付宝高于 10.8 的版本打开联系人消息会崩溃。该评论只描述症状，没有提供新的完整堆栈；因此不为它补造错误代码。
+
+该用户在 [2026-10-13 的后续评论](https://github.com/LineageOS/issues/issues/332#issuecomment-6142363390) 中表示，升级到 Android 17 后仍然存在。以上是外部用户反馈，本模块仍仅支持 Android 13 / API 33。
+
+### 本项目实测的另外两种错误文字
+
+本项目在 Android 13 设备上实际捕获到以下两个布局加载错误，来源与上述外部报告区分如下：
+
+```text
+File 夜晚 from xml type layout resource ID #0x3f090041
+Caused by: java.io.FileNotFoundException: 夜晚
+
+File 供应商安全补丁程序级别 from xml type layout resource ID #0x3f090019
+Caused by: java.io.FileNotFoundException: 供应商安全补丁程序级别
+```
+
+### 判断是否属于这类冲突
+
+同时对照以下特征：
+
+- 打开聊天或相关原生消息页面时崩溃，日志指向布局加载。
+- 资源 ID 以 `0x3f` 开头，或出现 `packageId=[63]`。
+- 异常为 `Resources$NotFoundException` / `FileNotFoundException`，布局文件名却变成“汽车”“夜晚”等系统文字。
+- 个人聊天页可能出现 `QuickMenuUtil.refreshQuickMenu` 调用；其他受影响页面的调用位置可能不同。
+
+仅凭“支付宝闪退”或异常类名不能确定就是这个问题，需要核对资源 ID 和错误文件名。
+
 ## 工作原理与范围
 
 在支付宝 `BundleResources` 构造前检查传入的 `AssetManager`。只有同时包含支付宝 `libmerged-slink-bundles-res.so` 和 `org.lineageos.platform-res.apk` 时，才从该资源管理器移除后者，同步 Java/native 资源数组并使缓存失效。
